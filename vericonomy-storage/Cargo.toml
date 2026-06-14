@@ -1,0 +1,17 @@
+[package]
+name = "vericonomy-storage"
+description = "Storage traits for wallet secrets, keystores, and transaction caches"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_storage"
+
+[dependencies]
+async-trait.workspace = true
+serde.workspace = true
+vericonomy-chain.workspace = true
+vericonomy-errors.workspace = true

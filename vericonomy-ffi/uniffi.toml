@@ -1,0 +1,5 @@
+[bindings.swift]
+cdylib_name = "vericonomy_ffi"
+
+[bindings.kotlin]
+package_name = "com.vericonomy.wallet"

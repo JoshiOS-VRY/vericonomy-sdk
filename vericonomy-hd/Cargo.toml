@@ -1,0 +1,21 @@
+[package]
+name = "vericonomy-hd"
+description = "HD derivation and P2PKH addresses for Vericonomy wallets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_hd"
+
+[dependencies]
+bip39.workspace = true
+bitcoin.workspace = true
+bs58.workspace = true
+ripemd.workspace = true
+sha2.workspace = true
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-wallet-core.workspace = true

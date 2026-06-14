@@ -1,0 +1,31 @@
+[package]
+name = "vericonomy-ffi"
+description = "UniFFI bindings for Vericonomy wallet SDK (iOS/Android)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib", "staticlib"]
+name = "vericonomy_ffi"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[dependencies]
+uniffi = { version = "0.28", features = ["cli"] }
+thiserror.workspace = true
+hex.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+vericonomy-chain.workspace = true
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-hd.workspace = true
+vericonomy-wallet-core.workspace = true
+vericonomy-wallet-engine.workspace = true
+
+[build-dependencies]
+uniffi = { version = "0.28", features = ["build"] }

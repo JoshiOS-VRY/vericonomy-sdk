@@ -1,0 +1,19 @@
+[package]
+name = "vericonomy-cli"
+description = "CLI utilities for mnemonic validation and address derivation"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "vericonomy-cli"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-hd.workspace = true
+vericonomy-wallet-core.workspace = true

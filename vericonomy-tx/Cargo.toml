@@ -1,0 +1,21 @@
+[package]
+name = "vericonomy-tx"
+description = "Vericonomy transaction wire format and sighash (nTime extension)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_tx"
+
+[dependencies]
+bitcoin.workspace = true
+hex.workspace = true
+sha2.workspace = true
+vericonomy-errors.workspace = true
+
+[dev-dependencies]
+hex.workspace = true
+serde_json.workspace = true

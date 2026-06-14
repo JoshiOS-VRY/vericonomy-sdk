@@ -1,0 +1,58 @@
+[workspace]
+resolver = "2"
+members = [
+    "vericonomy-errors",
+    "vericonomy-chain-params",
+    "vericonomy-wallet-core",
+    "vericonomy-tx",
+    "vericonomy-hd",
+    "vericonomy-wallet-engine",
+    "vericonomy-chain",
+    "vericonomy-storage",
+    "vericonomy-ffi",
+    "vericonomy-cli",
+]
+default-members = [
+    "vericonomy-errors",
+    "vericonomy-chain-params",
+    "vericonomy-wallet-core",
+    "vericonomy-tx",
+    "vericonomy-hd",
+    "vericonomy-wallet-engine",
+    "vericonomy-chain",
+    "vericonomy-storage",
+    "vericonomy-ffi",
+    "vericonomy-cli",
+]
+
+[workspace.package]
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.77"
+authors = ["Vericonomy developers"]
+license = "MIT"
+
+[workspace.dependencies]
+vericonomy-errors = { path = "vericonomy-errors" }
+vericonomy-chain-params = { path = "vericonomy-chain-params" }
+vericonomy-wallet-core = { path = "vericonomy-wallet-core" }
+vericonomy-tx = { path = "vericonomy-tx" }
+vericonomy-hd = { path = "vericonomy-hd" }
+vericonomy-wallet-engine = { path = "vericonomy-wallet-engine" }
+vericonomy-chain = { path = "vericonomy-chain" }
+vericonomy-storage = { path = "vericonomy-storage" }
+thiserror = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+bitcoin = { version = "0.32", default-features = false, features = ["std", "secp-recovery"] }
+bip39 = "2"
+bs58 = { version = "0.5", features = ["check"] }
+sha2 = "0.10"
+ripemd = "0.1"
+async-trait = "0.1"
+tokio = { version = "1", features = ["sync", "io-util", "time", "rt-multi-thread", "macros"] }
+tokio-rustls = "0.26"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+webpki-roots = "0.26"
+zeroize = { version = "1", features = ["derive"] }

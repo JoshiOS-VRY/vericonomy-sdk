@@ -1,0 +1,11 @@
+[package]
+name = "vericonomy-errors"
+description = "Shared error types for the Vericonomy wallet SDK"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror.workspace = true

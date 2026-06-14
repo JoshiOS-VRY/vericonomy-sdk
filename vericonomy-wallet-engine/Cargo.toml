@@ -1,0 +1,21 @@
+[package]
+name = "vericonomy-wallet-engine"
+description = "UTXO selection, signing, and address validation for Vericonomy wallets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_wallet_engine"
+
+[dependencies]
+bitcoin.workspace = true
+hex.workspace = true
+serde.workspace = true
+vericonomy-chain.workspace = true
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-hd.workspace = true
+vericonomy-tx.workspace = true

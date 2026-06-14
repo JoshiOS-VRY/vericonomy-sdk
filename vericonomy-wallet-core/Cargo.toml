@@ -1,0 +1,21 @@
+[package]
+name = "vericonomy-wallet-core"
+description = "Portable BIP39/BIP32/WIF wallet core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_wallet_core"
+
+[dependencies]
+bip39 = "2"
+bitcoin.workspace = true
+bs58.workspace = true
+rand = "0.8"
+sha2.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true

@@ -1,0 +1,16 @@
+[package]
+name = "vericonomy-chain-params"
+description = "Chain and network parameters for Vericoin and Verium"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+vericonomy-errors.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

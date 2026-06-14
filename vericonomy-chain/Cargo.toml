@@ -1,0 +1,31 @@
+[package]
+name = "vericonomy-chain"
+description = "Chain backends: full-node RPC and Electrum light client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_chain"
+
+[dependencies]
+async-trait.workspace = true
+hex.workspace = true
+once_cell = "1"
+serde.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["sync", "io-util", "time", "rt-multi-thread", "macros", "net"] }
+tokio-rustls.workspace = true
+rustls.workspace = true
+webpki-roots.workspace = true
+sha2.workspace = true
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-hd.workspace = true
+vericonomy-tx.workspace = true
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
