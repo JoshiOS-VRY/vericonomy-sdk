@@ -26,6 +26,9 @@ vericonomy-errors.workspace = true
 vericonomy-hd.workspace = true
 vericonomy-wallet-core.workspace = true
 vericonomy-wallet-engine.workspace = true
+vericonomy-wallet-facade.workspace = true
+vericonomy-storage.workspace = true
+vericonomy-storage-ios.workspace = true
 
 [build-dependencies]
 uniffi = { version = "0.28", features = ["build"] }

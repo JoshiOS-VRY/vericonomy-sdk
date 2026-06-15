@@ -1,0 +1,25 @@
+[package]
+name = "vericonomy-storage-ios"
+description = "iOS storage bundle for Vericonomy light wallets (Keychain + SQLite)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_storage_ios"
+
+[dependencies]
+async-trait.workspace = true
+hex.workspace = true
+dirs = "5"
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-storage.workspace = true
+vericonomy-storage-file.workspace = true
+vericonomy-storage-sqlite.workspace = true
+
+[target.'cfg(target_os = "ios")'.dependencies]
+security-framework = "3"
+keyring = "3"

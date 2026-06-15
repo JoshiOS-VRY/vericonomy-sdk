@@ -13,5 +13,14 @@ name = "vericonomy_storage"
 [dependencies]
 async-trait.workspace = true
 serde.workspace = true
+hex.workspace = true
 vericonomy-chain.workspace = true
+vericonomy-chain-params.workspace = true
 vericonomy-errors.workspace = true
+vericonomy-hd.workspace = true
+vericonomy-wallet-core.workspace = true
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+zeroize = { workspace = true, features = ["derive"] }
+tokio = { workspace = true, features = ["sync"] }

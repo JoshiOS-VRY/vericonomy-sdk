@@ -113,6 +113,9 @@ pub struct ElectrumConnection {
 
 impl ElectrumConnection {
     pub async fn connect(endpoint: ElectrumServerEndpoint) -> Result<Arc<Self>> {
+        if endpoint.use_tls {
+            crate::ensure_tls_crypto_provider();
+        }
         let addr = format!("{}:{}", endpoint.host, endpoint.port);
         let tcp = TcpStream::connect(&addr)
             .await

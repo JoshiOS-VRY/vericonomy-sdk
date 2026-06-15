@@ -14,6 +14,15 @@ use vericonomy_hd::address_to_script_pubkey;
 
 pub use types::*;
 
+static TLS_CRYPTO: std::sync::OnceLock<()> = std::sync::OnceLock::new();
+
+/// Install rustls's ring crypto provider once (required before TLS on iOS static libs).
+pub fn ensure_tls_crypto_provider() {
+    TLS_CRYPTO.get_or_init(|| {
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    });
+}
+
 /// Remote read + broadcast surface shared by full-node and light wallets.
 #[async_trait]
 pub trait ChainBackend: Send + Sync {

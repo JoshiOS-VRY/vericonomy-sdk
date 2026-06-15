@@ -1,0 +1,28 @@
+[package]
+name = "vericonomy-wallet-facade"
+description = "High-level light-wallet orchestration for Vericonomy shells (iOS, Tauri, CLI)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_wallet_facade"
+
+[dependencies]
+bitcoin.workspace = true
+futures-util = "0.3"
+hex.workspace = true
+serde.workspace = true
+async-trait.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "rt-multi-thread", "macros"] }
+vericonomy-chain.workspace = true
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-hd.workspace = true
+vericonomy-wallet-core.workspace = true
+vericonomy-tx.workspace = true
+vericonomy-wallet-engine.workspace = true
+vericonomy-storage.workspace = true
+reqwest.workspace = true

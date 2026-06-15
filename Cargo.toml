@@ -7,8 +7,12 @@ members = [
     "vericonomy-tx",
     "vericonomy-hd",
     "vericonomy-wallet-engine",
+    "vericonomy-wallet-facade",
     "vericonomy-chain",
     "vericonomy-storage",
+    "vericonomy-storage-sqlite",
+    "vericonomy-storage-file",
+    "vericonomy-storage-ios",
     "vericonomy-ffi",
     "vericonomy-cli",
 ]
@@ -19,8 +23,12 @@ default-members = [
     "vericonomy-tx",
     "vericonomy-hd",
     "vericonomy-wallet-engine",
+    "vericonomy-wallet-facade",
     "vericonomy-chain",
     "vericonomy-storage",
+    "vericonomy-storage-sqlite",
+    "vericonomy-storage-file",
+    "vericonomy-storage-ios",
     "vericonomy-ffi",
     "vericonomy-cli",
 ]
@@ -39,8 +47,12 @@ vericonomy-wallet-core = { path = "vericonomy-wallet-core" }
 vericonomy-tx = { path = "vericonomy-tx" }
 vericonomy-hd = { path = "vericonomy-hd" }
 vericonomy-wallet-engine = { path = "vericonomy-wallet-engine" }
+vericonomy-wallet-facade = { path = "vericonomy-wallet-facade" }
 vericonomy-chain = { path = "vericonomy-chain" }
 vericonomy-storage = { path = "vericonomy-storage" }
+vericonomy-storage-sqlite = { path = "vericonomy-storage-sqlite" }
+vericonomy-storage-file = { path = "vericonomy-storage-file" }
+vericonomy-storage-ios = { path = "vericonomy-storage-ios" }
 thiserror = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -54,5 +66,6 @@ async-trait = "0.1"
 tokio = { version = "1", features = ["sync", "io-util", "time", "rt-multi-thread", "macros"] }
 tokio-rustls = "0.26"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 webpki-roots = "0.26"
 zeroize = { version = "1", features = ["derive"] }

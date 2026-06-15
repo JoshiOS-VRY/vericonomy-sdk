@@ -1,0 +1,21 @@
+[package]
+name = "vericonomy-storage-sqlite"
+description = "SQLite UTXO and transaction history cache for Vericonomy light wallets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[lib]
+name = "vericonomy_storage_sqlite"
+
+[dependencies]
+async-trait.workspace = true
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde.workspace = true
+serde_json.workspace = true
+vericonomy-chain.workspace = true
+vericonomy-chain-params.workspace = true
+vericonomy-errors.workspace = true
+vericonomy-storage.workspace = true
