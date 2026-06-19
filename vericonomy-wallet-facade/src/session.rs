@@ -219,6 +219,44 @@ where
 
     pub async fn send_to_address<H: HistorySource>(
         &self,
+        history: &H,
+        recipient: &str,
+        amount_sats: i64,
+        fee_rate_coins_per_kb: Option<f64>,
+        passphrase: &str,
+    ) -> Result<SendResult> {
+        let mut last_err: Option<vericonomy_errors::WalletError> = None;
+        for attempt in 0..2 {
+            match self
+                .send_to_address_once(
+                    history,
+                    recipient,
+                    amount_sats,
+                    fee_rate_coins_per_kb,
+                    passphrase,
+                )
+                .await
+            {
+                Ok(result) => return Ok(result),
+                Err(e) if attempt == 0 && e.is_electrum_tx_lookup_failure() => {
+                    last_err = Some(e);
+                    self.rotate_electrum_server().await?;
+                    let backend = self.backend.read().await;
+                    let _ = self
+                        .sync
+                        .list_spendable_utxos(self.coin, &*backend, passphrase)
+                        .await?;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        Err(last_err.unwrap_or_else(|| {
+            vericonomy_errors::WalletError::other("send failed after electrum retry")
+        }))
+    }
+
+    async fn send_to_address_once<H: HistorySource>(
+        &self,
         _history: &H,
         recipient: &str,
         amount_sats: i64,
@@ -282,6 +320,16 @@ where
         *self.electrum_servers.write().await = servers.clone();
         *self.backend.write().await = ElectrumLightClient::new(self.coin, &servers)?;
         Ok(())
+    }
+
+    async fn rotate_electrum_server(&self) -> Result<()> {
+        let mut servers = self.configured_electrum_servers().await;
+        if servers.len() <= 1 {
+            return Ok(());
+        }
+        let first = servers.remove(0);
+        servers.push(first);
+        self.set_electrum_servers(servers).await
     }
 
     pub fn default_electrum_servers(&self) -> Vec<String> {

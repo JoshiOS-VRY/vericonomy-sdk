@@ -206,7 +206,7 @@ impl<B: ChainBackend> LightWallet<B> {
             rate,
             outputs.len(),
         )?;
-        prepare_utxos_for_signing(&self.backend, &mut selected).await?;
+        prepare_utxos_for_signing(&self.backend, self.coin, &mut selected).await?;
         let fee_sats =
             vericonomy_wallet_engine::utxo_selector::replan_fee_for_selected(
                 &selected,
@@ -246,7 +246,7 @@ impl<B: ChainBackend> LightWallet<B> {
             rate,
             outputs.len(),
         )?;
-        prepare_utxos_for_signing(&self.backend, &mut selected).await?;
+        prepare_utxos_for_signing(&self.backend, self.coin, &mut selected).await?;
         let fee_sats =
             vericonomy_wallet_engine::utxo_selector::replan_fee_for_selected(
                 &selected,

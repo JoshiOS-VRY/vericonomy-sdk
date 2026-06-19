@@ -56,7 +56,7 @@ pub async fn send_payment<B: ChainBackend>(
 
     let (mut selected, _initial_fee) =
         plan_send_utxos(&selected, params.amount_sats, rate, 1)?;
-    prepare_utxos_for_signing(backend, &mut selected).await?;
+    prepare_utxos_for_signing(backend, coin, &mut selected).await?;
     let fee_sats = replan_fee_for_selected(&selected, params.amount_sats, rate, 1)?;
 
     let outputs = vec![(params.recipient.clone(), params.amount_sats)];

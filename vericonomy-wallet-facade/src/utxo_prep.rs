@@ -1,10 +1,10 @@
 //! Refresh UTXO metadata from parent transactions before signing.
 
-use futures_util::future::try_join_all;
-
 use vericonomy_chain::ChainBackend;
 use vericonomy_chain::types::Utxo;
+use vericonomy_chain_params::CoinId;
 use vericonomy_errors::{Result, WalletError};
+use vericonomy_hd::address_to_script_pubkey;
 use vericonomy_tx::{
     decode_verium_tx, display_txid_from_raw, parse_display_txid, reverse_display_txid_hex,
     wire_txid_from_raw,
@@ -74,23 +74,61 @@ fn apply_parent_tx_to_utxo(utxo: &mut Utxo, bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
+fn normalize_utxo_txid(utxo: &mut Utxo) -> Result<()> {
+    if parse_display_txid(&utxo.txid).is_ok() {
+        return Ok(());
+    }
+    if let Ok(alt) = reverse_display_txid_hex(&utxo.txid) {
+        if parse_display_txid(&alt).is_ok() {
+            utxo.txid = alt;
+            return Ok(());
+        }
+    }
+    Err(WalletError::other(format!(
+        "invalid parent txid for UTXO {}:{}",
+        utxo.txid, utxo.vout
+    )))
+}
+
+/// Use wallet-local script/address metadata when Electrum cannot fetch a confirmed parent tx.
+fn apply_utxo_from_wallet_cache(coin: CoinId, utxo: &mut Utxo) -> Result<()> {
+    if utxo.address.is_empty() || utxo.script_hex.is_empty() {
+        return Err(WalletError::other(format!(
+            "cannot prepare UTXO {}:{} without address/script metadata",
+            utxo.txid, utxo.vout
+        )));
+    }
+    let derived = hex::encode(
+        address_to_script_pubkey(coin, &utxo.address)
+            .map_err(|e| WalletError::other(format!("derive spend script: {e}")))?,
+    );
+    if !script_pays_to(&derived, &utxo.script_hex) {
+        return Err(WalletError::other(format!(
+            "UTXO {}:{} script does not match derived address script",
+            utxo.txid, utxo.vout
+        )));
+    }
+    utxo.script_hex = derived;
+    normalize_utxo_txid(utxo)
+}
+
 /// Fetch each parent tx from the chain backend, normalize txid/script/value, and verify the spend.
 pub async fn prepare_utxos_for_signing(
     backend: &dyn ChainBackend,
+    coin: CoinId,
     utxos: &mut [Utxo],
 ) -> Result<()> {
     if utxos.is_empty() {
         return Ok(());
     }
-    let txids: Vec<String> = utxos.iter().map(|u| u.txid.clone()).collect();
-    let parent_bytes = try_join_all(
-        txids
-            .iter()
-            .map(|id| fetch_parent_tx_bytes(backend, id)),
-    )
-    .await?;
-    for (utxo, bytes) in utxos.iter_mut().zip(parent_bytes) {
-        apply_parent_tx_to_utxo(utxo, &bytes)?;
+    for utxo in utxos.iter_mut() {
+        match fetch_parent_tx_bytes(backend, &utxo.txid).await {
+            Ok(bytes) => apply_parent_tx_to_utxo(utxo, &bytes)?,
+            Err(e) if e.is_electrum_tx_lookup_failure() && utxo.height > 0 => {
+                apply_utxo_from_wallet_cache(coin, utxo)?;
+            }
+            Err(e) => return Err(e),
+        }
     }
     Ok(())
 }

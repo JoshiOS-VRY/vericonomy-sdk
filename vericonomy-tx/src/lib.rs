@@ -10,7 +10,7 @@ use bitcoin::secp256k1::{Message, Secp256k1, SecretKey};
 use bitcoin::sighash::EcdsaSighashType;
 use bitcoin::script::PushBytes;
 use bitcoin::hashes::{sha256d, Hash};
-use bitcoin::{PrivateKey, PublicKey, ScriptBuf, Sequence, TxIn, TxOut, Txid};
+use bitcoin::{OutPoint, PrivateKey, PublicKey, ScriptBuf, Sequence, TxIn, TxOut, Txid};
 use sha2::{Digest, Sha256};
 
 use vericonomy_errors::{WalletError, Result as SdkResult};
@@ -99,6 +99,11 @@ pub fn decode_verium_tx(bytes: &[u8]) -> SdkResult<VeriumMutableTx> {
         lock_time: Decodable::consensus_decode(&mut slice)
             .map_err(|e| consensus_err("decode locktime", e))?,
     })
+}
+
+/// True when the tx is a coinbase (single null prevout), matching Core `IsCoinBase`.
+pub fn is_coinbase_tx(tx: &VeriumMutableTx) -> bool {
+    tx.inputs.len() == 1 && tx.inputs[0].previous_output == OutPoint::null()
 }
 
 /// Opcode-aware `FindAndDelete(scriptCode, OP_CODESEPARATOR)` from Verium Core.

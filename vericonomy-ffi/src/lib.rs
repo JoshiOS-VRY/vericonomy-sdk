@@ -6,7 +6,7 @@ use std::sync::Arc;
 use vericonomy_chain::types::{Utxo, WalletBalance, WalletTx};
 use vericonomy_chain_params::CoinId;
 use vericonomy_errors::WalletError;
-use vericonomy_hd::{coins_to_sats, sats_to_coins};
+use vericonomy_hd::{coins_to_sats, is_hd_master_secret, normalize_light_wallet_seed, parse_root_xpriv, sats_to_coins};
 use vericonomy_storage_ios::{
     open_ios_wallet_stores, IosFileKeystoreStore, IosSqliteCache, IosWalletStores,
 };
@@ -194,6 +194,32 @@ impl LightWalletSessionHandle {
         Ok(LightWallet::<vericonomy_chain::electrum::ElectrumLightClient>::validate_mnemonic(
             &phrase,
         ))
+    }
+
+    /// Normalize user-provided import material (strip numbered copy prefixes, collapse HD key whitespace).
+    pub fn normalize_light_wallet_seed(&self, secret: String) -> String {
+        normalize_light_wallet_seed(&secret)
+    }
+
+    /// True when `secret` is a full-node HD master key (xprv or chain-specific export).
+    pub fn is_hd_master_secret(&self, secret: String) -> bool {
+        let trimmed = normalize_light_wallet_seed(&secret);
+        is_hd_master_secret(self.coin, &trimmed)
+    }
+
+    /// Validates BIP39 mnemonic or full-node HD master key for light-wallet import.
+    pub fn validate_import_seed(&self, secret: String) -> Result<(), FfiWalletError> {
+        let trimmed = normalize_light_wallet_seed(&secret);
+        if is_hd_master_secret(self.coin, &trimmed) {
+            parse_root_xpriv(self.coin, &trimmed).map_err(FfiWalletError::from)?;
+            return Ok(());
+        }
+        if LightWallet::<vericonomy_chain::electrum::ElectrumLightClient>::validate_mnemonic(&trimmed) {
+            return Ok(());
+        }
+        Err(FfiWalletError::from(WalletError::other(
+            "invalid seed — enter a 24-word BIP39 recovery phrase or the HD master key from desktop Security → Export",
+        )))
     }
 
     pub fn generate_mnemonic(&self) -> Result<String, FfiWalletError> {

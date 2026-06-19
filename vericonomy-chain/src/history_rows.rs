@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use vericonomy_chain_params::CoinId;
 use vericonomy_hd::{p2pkh_script_to_address, sats_to_coins};
-use vericonomy_tx::VeriumMutableTx;
+use vericonomy_tx::{is_coinbase_tx, VeriumMutableTx};
 
 use crate::types::WalletTx;
 
@@ -30,6 +30,33 @@ fn category_receive(height: i32) -> String {
     } else {
         "receive".into()
     }
+}
+
+/// Core-style category for an incoming credit (receive, mined, immature, stake).
+pub fn category_for_incoming_credit(
+    coin: CoinId,
+    height: i32,
+    confirmations: i32,
+    is_coinbase: bool,
+    is_coinstake: bool,
+) -> String {
+    if is_coinstake {
+        return "stake".into();
+    }
+    if is_coinbase {
+        if height <= 0 {
+            return "unconfirmed".into();
+        }
+        if confirmations <= 0 {
+            return "orphan".into();
+        }
+        let maturity = coin.profile().maturity_confirmations as i32;
+        if confirmations < maturity + 1 {
+            return "immature".into();
+        }
+        return "generate".into();
+    }
+    category_receive(height)
 }
 
 struct OutputView {
@@ -70,6 +97,7 @@ fn change_output_address(wallet_outputs: &[OutputView]) -> Option<String> {
 }
 
 fn rows_from_outputs(
+    coin: CoinId,
     txid: &str,
     height: i32,
     blockheight: Option<u32>,
@@ -77,6 +105,7 @@ fn rows_from_outputs(
     blockhash: Option<String>,
     confirmations: i32,
     is_spend: bool,
+    is_coinbase: bool,
     wallet_outputs: Vec<OutputView>,
     external_outputs: Vec<OutputView>,
 ) -> Vec<WalletTx> {
@@ -91,7 +120,7 @@ fn rows_from_outputs(
                 time,
                 blockhash.clone(),
                 confirmations,
-                &category_receive(height),
+                &category_for_incoming_credit(coin, height, confirmations, is_coinbase, false),
                 sats_to_coins(out.value_sats),
                 &out.address,
             ));
@@ -109,7 +138,7 @@ fn rows_from_outputs(
             time,
             blockhash.clone(),
             confirmations,
-            &category_receive(height),
+            &category_for_incoming_credit(coin, height, confirmations, is_coinbase, false),
             sats_to_coins(out.value_sats),
             &out.address,
         ));
@@ -193,7 +222,10 @@ pub fn rows_from_decoded_tx(
 
     wallet_outputs.retain(|o| wallet_addresses.contains(o.address.as_str()));
 
+    let is_coinbase = is_coinbase_tx(decoded);
+
     rows_from_outputs(
+        coin,
         txid,
         height,
         blockheight,
@@ -201,6 +233,7 @@ pub fn rows_from_decoded_tx(
         None,
         confirmations,
         is_spend,
+        is_coinbase,
         wallet_outputs,
         external_outputs,
     )
@@ -208,4 +241,33 @@ pub fn rows_from_decoded_tx(
 
 fn script_matches_wallet(script: &[u8], wallet_scripts: &HashSet<Vec<u8>>) -> bool {
     wallet_scripts.iter().any(|s| s.as_slice() == script)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mature_coinbase_is_generate() {
+        assert_eq!(
+            category_for_incoming_credit(CoinId::Verium, 100, 101, true, false),
+            "generate"
+        );
+    }
+
+    #[test]
+    fn immature_coinbase_before_maturity() {
+        assert_eq!(
+            category_for_incoming_credit(CoinId::Verium, 100, 50, true, false),
+            "immature"
+        );
+    }
+
+    #[test]
+    fn plain_receive_unchanged() {
+        assert_eq!(
+            category_for_incoming_credit(CoinId::Verium, 100, 10, false, false),
+            "receive"
+        );
+    }
 }

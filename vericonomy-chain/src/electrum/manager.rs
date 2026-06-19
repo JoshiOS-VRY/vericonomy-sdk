@@ -301,6 +301,24 @@ impl ElectrumLightClient {
             immature_sats: 0,
         }
     }
+
+    async fn get_raw_tx_hex_once(&self, txid: &str) -> Result<String> {
+        let txid = txid.trim();
+        // Electrum spec: verbose=false returns raw tx as hex; verbose=true returns JSON.
+        let raw = self
+            .call_with_failover_critical("blockchain.transaction.get", json!([txid, false]))
+            .await?;
+        match crate::tx_hex::parse_electrum_transaction_get(&raw) {
+            Ok(hex) => Ok(hex),
+            Err(first) => {
+                let verbose = self
+                    .call_with_failover_critical("blockchain.transaction.get", json!([txid, true]))
+                    .await?;
+                crate::tx_hex::parse_electrum_transaction_get(&verbose)
+                    .map_err(|_| first)
+            }
+        }
+    }
 }
 
 #[async_trait]
@@ -475,21 +493,32 @@ impl ChainBackend for ElectrumLightClient {
     }
 
     async fn get_raw_tx_hex(&self, txid: &str) -> Result<String> {
-        let txid = txid.trim();
-        // Electrum spec: verbose=false returns raw tx as hex; verbose=true returns JSON.
-        let raw = self
-            .call_with_failover_critical("blockchain.transaction.get", json!([txid, false]))
-            .await?;
-        match crate::tx_hex::parse_electrum_transaction_get(&raw) {
-            Ok(hex) => Ok(hex),
-            Err(first) => {
-                let verbose = self
-                    .call_with_failover_critical("blockchain.transaction.get", json!([txid, true]))
-                    .await?;
-                crate::tx_hex::parse_electrum_transaction_get(&verbose)
-                    .map_err(|_| first)
+        let start_idx = self.active_index.load(Ordering::SeqCst);
+        let server_count = self.servers.len().max(1);
+        let mut last_err = WalletError::other("failed to fetch transaction");
+
+        for attempt in 0..server_count {
+            match self.get_raw_tx_hex_once(txid).await {
+                Ok(hex) => return Ok(hex),
+                Err(e) if e.is_electrum_tx_lookup_failure() && self.servers.len() > 1 => {
+                    last_err = e;
+                    let next = (start_idx + attempt + 1) % self.servers.len();
+                    self.active_index.store(next, Ordering::SeqCst);
+                    *self.connection.write().await = None;
+                    tracing::warn!(
+                        "electrum tx lookup failed on {}; failing over to {}",
+                        self.servers
+                            .get((next + self.servers.len() - 1) % self.servers.len())
+                            .map(|s| s.display())
+                            .unwrap_or_default(),
+                        self.servers[next].display()
+                    );
+                }
+                Err(e) => return Err(e),
             }
         }
+
+        Err(last_err)
     }
 
     async fn estimate_fee(&self, target_blocks: u32) -> Result<FeeRate> {

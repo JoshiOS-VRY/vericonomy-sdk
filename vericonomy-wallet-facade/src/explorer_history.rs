@@ -8,6 +8,7 @@ use vericonomy_chain_params::CoinId;
 use vericonomy_errors::{Result, WalletError};
 
 use crate::history::{wallet_tx_row_key, HistorySource};
+use vericonomy_chain::history_rows::category_for_incoming_credit;
 use vericonomy_chain::types::WalletTx;
 
 const PAGE_SIZE: u32 = 100;
@@ -63,6 +64,10 @@ struct AddressTx {
     time: Option<u64>,
     #[serde(default, rename = "netDelta")]
     net_delta: Option<AmountField>,
+    #[serde(default, rename = "isCoinbase")]
+    is_coinbase: bool,
+    #[serde(default, rename = "isCoinstake")]
+    is_coinstake: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -81,20 +86,28 @@ fn confirmations_for(tip: Option<u32>, block_height: Option<u64>) -> i32 {
     }
 }
 
-fn row_from_address_tx(address: &str, tx: &AddressTx, tip: Option<u32>) -> Option<WalletTx> {
+fn row_from_address_tx(
+    coin: CoinId,
+    address: &str,
+    tx: &AddressTx,
+    tip: Option<u32>,
+) -> Option<WalletTx> {
     let delta = parse_amount_coins(tx.net_delta.as_ref()?.amount.as_str());
     if delta.abs() < 0.000000_01 {
         return None;
     }
     let height = tx.block_height.map(|h| h as i32).unwrap_or(0);
-    let category = if delta >= 0.0 {
-        if height <= 0 {
-            "unconfirmed".to_string()
-        } else {
-            "receive".to_string()
-        }
-    } else {
+    let confirmations = confirmations_for(tip, tx.block_height);
+    let category = if delta < 0.0 {
         "send".to_string()
+    } else {
+        category_for_incoming_credit(
+            coin,
+            height,
+            confirmations,
+            tx.is_coinbase,
+            tx.is_coinstake,
+        )
     };
     Some(WalletTx {
         txid: tx.txid.clone(),
@@ -103,7 +116,7 @@ fn row_from_address_tx(address: &str, tx: &AddressTx, tip: Option<u32>) -> Optio
         category,
         amount: delta,
         address: Some(address.to_string()),
-        confirmations: confirmations_for(tip, tx.block_height),
+        confirmations,
         time: tx.time,
         blockhash: None,
         blockheight: tx.block_height.map(|h| h as u32),
@@ -224,7 +237,7 @@ impl HistorySource for ExplorerHistorySource {
                 Err(_) => continue,
             };
             for tx in &txs {
-                if let Some(row) = row_from_address_tx(&address, tx, tip) {
+                if let Some(row) = row_from_address_tx(coin, &address, tx, tip) {
                     let key = wallet_tx_row_key(&row);
                     if seen_keys.insert(key) {
                         rows.push(row);

@@ -22,7 +22,7 @@ for target in "${TARGETS[@]}"; do
 done
 
 HOST_LIB="$SDK/target/release/libvericonomy_ffi.dylib"
-if [[ ! -f "$HOST_LIB" ]]; then
+if [[ ! -f "$HOST_LIB" ]] || [[ "${FORCE_RUST_REBUILD:-}" == "1" ]]; then
   cargo build -p vericonomy-ffi --release
 fi
 

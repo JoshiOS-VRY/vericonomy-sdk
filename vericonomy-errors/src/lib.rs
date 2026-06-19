@@ -116,6 +116,15 @@ impl WalletError {
             || msg.contains("electrum TLS")
             || msg.contains("electrum call timed out")
     }
+
+    /// Electrum backend could not load a confirmed parent tx (often transient / wrong server).
+    pub fn is_electrum_tx_lookup_failure(&self) -> bool {
+        let msg = self.to_string().to_ascii_lowercase();
+        msg.contains("no such mempool transaction")
+            || msg.contains("mempool transaction")
+            || msg.contains("txindex")
+            || msg.contains("blockchain transaction queries")
+    }
 }
 
 pub type Result<T> = std::result::Result<T, WalletError>;
